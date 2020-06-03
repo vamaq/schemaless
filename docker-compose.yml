@@ -1,0 +1,14 @@
+version: '3.7'  # Requires docker 18.06.0 or greater
+services:
+
+  postgres:
+    image: postgres:12.2
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5432:5432' # Used to access the instance from outside the docker. 
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data/:rw,cached"
+    
+volumes:
+  postgres_data:

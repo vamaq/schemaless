@@ -1,0 +1,9 @@
+alembic
+flask
+flask-restful
+jsonschema
+sqlalchemy
+pyyaml
+psycopg2
+-e ./db_model/
+-e ./config/

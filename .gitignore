@@ -1,0 +1,15 @@
+# Compiled python
+*.pyc
+*.egg-info
+__pycache__
+
+# Virtual environments
+venv
+
+# Local overrides
+docker-compose.override.yml
+
+# Visual Studio Code IDE config files
+.vscode
+
+.DS_Store
