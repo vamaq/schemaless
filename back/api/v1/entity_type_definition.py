@@ -6,6 +6,8 @@ from .entity_type import entity_type_format
 from .filters import filter_type, single_table_query_filter
 from model import tables, metadata
 
+from sqlalchemy.sql import func, and_
+
 
 entity_type_definition_format = {
     'eid': fields.String,
@@ -129,3 +131,32 @@ class EntityTypeDefinition(Resource):
 
         except ValidationError as e:
             abort(400, str(e))
+
+
+class EntityTypeDefinitionLatestEid(Resource):
+    def get(self, eid):
+        """ Gets one single entity type latest definition.
+        """
+        sub = g.db_session.query(
+            tables.EntityTypeDefinition.entity_type_eid.label('entity_type_eid'),
+            func.max(tables.EntityTypeDefinition.version).label('version')
+        ).filter(
+            tables.EntityTypeDefinition.entity_type_eid == eid
+        ).group_by(
+            tables.EntityTypeDefinition.entity_type_eid
+        ).subquery()
+
+        latest_definition = g.db_session.query(
+            tables.EntityTypeDefinition
+        ).join(
+            sub,
+            and_(
+                sub.c.entity_type_eid == tables.EntityTypeDefinition.entity_type_eid,
+                sub.c.version == tables.EntityTypeDefinition.version,
+            ),
+        ).first()
+
+        if not latest_definition:
+            abort(404)
+
+        return marshal(latest_definition, entity_type_definition_format), 200

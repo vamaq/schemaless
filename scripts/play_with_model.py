@@ -2,6 +2,7 @@
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func, and_
 
 from config import config
 from model.tables import Node, Relation, EntityType, EntityTypeDefinition
@@ -22,20 +23,17 @@ session = sessionmaker(bind=engine)()
 sqlalchemy.event.listen(engine, "before_cursor_execute", lambda *a, **k: print('------------'))
 
 # Run validations in entity type definitions
-
 etd = session.query(EntityTypeDefinition).all()
 for e in etd:
     validate(e)
 
 # Some queries
-
 etd = session.query(EntityTypeDefinition).all()
 etd[0].entity_type
 nodes = etd[0].entity_type.nodes
 nodes[0].relates_to[0].relates_to.properties
 
 # Basic filter
-
 session.query(
     Node.properties["title"]
 ).filter(
@@ -53,7 +51,6 @@ session.query(
 ).all()
 
 # Using properties for join and entity for filter
-
 nodes = session.query(
     Node
 ).join(
@@ -63,7 +60,6 @@ nodes = session.query(
 ).all()
 
 # Query: Sorted by price property at the relation.
-
 session.query(
     Node.properties, Relation.properties
 ).join(
@@ -77,7 +73,6 @@ session.query(
 ).all()
 
 # Query: get the latest definition version 
-
 session.query(
     EntityTypeDefinition
 ).filter(
@@ -85,3 +80,21 @@ session.query(
 ).order_by(
     EntityTypeDefinition.version.desc()
 ).first()
+
+# Last definition by version number 
+sub = session.query(
+    EntityTypeDefinition.entity_type_eid.label('entity_type_eid'),
+    func.max(EntityTypeDefinition.version).label('version')
+).group_by(
+    EntityTypeDefinition.entity_type_eid
+).subquery()
+
+session.query(
+    EntityTypeDefinition
+).join(
+    sub,
+    and_(
+        sub.c.entity_type_eid == EntityTypeDefinition.entity_type_eid,
+        sub.c.version == EntityTypeDefinition.version,
+    ),
+).all()

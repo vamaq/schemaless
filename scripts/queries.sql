@@ -21,4 +21,15 @@ select
 	n.properties
 from entity_type et join entity_type_definition etd on et.eid = etd.entity_type_eid
 					join node n on etd.eid = n.definition_eid;
+	
+		
+-- Last definition by version number
+select * 
+from entity_type_definition etd join (
+	select max(version) as version, entity_type_eid
+	from entity_type_definition
+	group by entity_type_eid ) max on max.version = etd.version and max.entity_type_eid = etd.entity_type_eid;
+
+
+
 					
