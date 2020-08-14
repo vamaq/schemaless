@@ -44,7 +44,12 @@ class EntityType(TimestampMixin, Base):
         secondary="entity_type_definition",
         viewonly=True,
         sync_backref=False,
-        backref=backref("entity_type", uselist=False, lazy='subquery', single_parent=True),
+        backref=backref(
+            "entity_type",
+            uselist=False,
+            lazy='subquery',
+            single_parent=True
+        ),
     )
 
 
@@ -69,8 +74,8 @@ class EntityTypeDefinition(TimestampMixin, Base):
         # cascade="all",
         backref=backref(
             "entity_type_definitions",
-            uselist=False, 
-            lazy='subquery',
+            uselist=True,
+            # lazy='subquery',
             single_parent=True,
             cascade="all, delete-orphan",
         ),
@@ -89,14 +94,23 @@ class Relation(TimestampMixin, Base):
     relates_to = sa.orm.relationship(
         "Node",
         primaryjoin="Relation.node_to_eid == Node.eid",
-        backref=backref("relates_from", cascade="all"),
+        backref=backref(
+            "relates_from",
+            uselist=True,
+            cascade="all",
+        ),
     )
 
     node_from_eid = sa.Column(sa.Unicode, sa.ForeignKey('node.eid'), primary_key=True)
     relates_from = sa.orm.relationship(
         "Node",
         primaryjoin="Relation.node_from_eid == Node.eid",
-        backref=backref("relates_to", cascade="all"),
+        backref=backref(
+            "relates_to",
+            uselist=True,
+            cascade="all",
+            lazy="subquery"
+        ),
     )
 
     label = sa.Column(sa.Unicode, nullable=False) # The label describing the relation     
@@ -119,9 +133,16 @@ class Node(TimestampMixin, Base):
     definition = sa.orm.relationship(
         "EntityTypeDefinition",
         cascade="all",
-        backref=backref("node_entities", lazy='subquery', cascade="all, delete-orphan"),
+        # lazy="subquery",
+        backref=backref(
+            "node_entities",
+            # lazy='subquery',
+            cascade="all, delete-orphan"
+        ),
     )
-    node_to = sa.orm.relationship("Node", secondary=Relation.__table__,
+    node_to = sa.orm.relationship(
+        "Node",
+        secondary=Relation.__table__,
         primaryjoin=eid == Relation.__table__.c.node_from_eid,
         secondaryjoin=Relation.__table__.c.node_to_eid == eid,
         backref=backref("node_from"), 
