@@ -34,7 +34,8 @@ filter_schema = {
 }
 
 
-Filter = namedtuple('Filter', 'operation field value')
+Filter = namedtuple('Filter', 'operation table field value')
+Join = namedtuple('Join', 'table field')
 
 
 def filter_type(filter: [dict,str]):
@@ -53,6 +54,7 @@ def filter_type(filter: [dict,str]):
 
 def extract_filters(filters, table):
     """ Loop thru the filters list and inspect the model structure to return the set of values to join and filter.
+    The expected filter metadata structure should match the one specified at filter_schema.    
     """
     new_filters = set()
     joins = set()
@@ -60,22 +62,32 @@ def extract_filters(filters, table):
     for filter in filters:
         try:
             fields = filter["field"].split('.')
+            last_table = table # Latest Joined Table.
             while fields:
                 current_field = fields.pop(0)
 
-                if isinstance(getattr(table, current_field).property, RelationshipProperty):
-                    # The field is a relation and should be included in the joins list
-                    joins.add(current_field)
+                if isinstance(getattr(last_table, current_field).property, RelationshipProperty):
+                    # The field is a relation and should be included in the joins list.
+                    joins.add(Join(last_table, current_field))
 
-                elif isinstance(getattr(table, current_field).property, ColumnProperty):
+                    # Get the table this field belongs to.
+                    last_table = getattr(last_table, current_field).property.mapper.class_
+
+                elif isinstance(getattr(last_table, current_field).property, ColumnProperty):
                 
-                    if isinstance(getattr(table, current_field).property.columns[0].type, JSONB):
+                    if isinstance(getattr(last_table, current_field).property.columns[0].type, JSONB):
                         # The filter applies to a JSON attribute
                         # TODO: Code this
                         raise ValueError("Not implemented")
                     
                     if not fields: # This is the last element of the array where the condition should be applied.
-                        new_filters.add(Filter(filter['operation'], current_field, filter["value"]))
+                        new_filters.add(
+                            Filter(
+                                filter['operation'],
+                                last_table,
+                                current_field,
+                                filter["value"]
+                        ))
                     else:
                         raise ValueError(f"Additional nested fields: {'.'.join(fields)}")
                     
@@ -91,12 +103,12 @@ def single_table_query_filter(query, filters):
     This is a generic filter implementation. Is... how to say it: maybe too flexible, maybe too ad hoc, time will tell.
     
     Restrictions: 
-        This implementation only goes one relation level deep. Meaning it could only join to a direct ORM relation.
         The select part of the query should consist of only one table.
 
     Filter fields examples:
-        relates_to.eid = relates_to -> join / eid -> filter 
-        properties.names = properties -> json / names -> json prop
+        Nodes.relates_to.eid = relates_to -> join + eid -> filter 
+        Nodes.properties.names = properties -> json + names -> json prop
+        Nodes.definition.entity_type.eid -> definition -> join + entity_type -> join + eid -> filter
     """
     if filters:
         
@@ -110,12 +122,12 @@ def single_table_query_filter(query, filters):
             joins, new_filters = extract_filters(filters, table)
 
             for join_field in joins:
-                query = query.join(getattr(table, join_field))
+                query = query.join(getattr(join_field.table, join_field.field))
             
             for filter in new_filters:
                     
                 if filter.operation == "eq":
-                    query = query.filter(getattr(table, filter.field) == filter.value)        
+                    query = query.filter(getattr(filter.table, filter.field) == filter.value)        
                 else:
                     raise ValueError(f"Operation {filter.operation} not supported")
 

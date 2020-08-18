@@ -17,7 +17,7 @@ group by 1, 2;
 select
 	et.type, 
 	etd.properties,
-	etd.relationships,
+	etd.relations,
 	n.properties
 from entity_type et join entity_type_definition etd on et.eid = etd.entity_type_eid
 					join node n on etd.eid = n.definition_eid;
