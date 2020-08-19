@@ -31,13 +31,18 @@
         </template>
 
         <template v-slot:row-details="data">
-          <div v-for="(relation, index) in data.item.__relates_to" :key="index" class="relations">
+          <div 
+            v-for="(relation, index) in data.item.__relates_to"
+            :key="index" 
+            class="relations"
+            @click="redirect(relation.relates_to.eid, relation.relates_to.entity_type.eid)"
+          >
             <div class=label>
-              {{relation.label}}
+              {{`${relation.label} - ${relation.relates_to.entity_type.type}`}}
             </div>
             <div class=properties>
               <div v-for="(value, key) in relation.properties" :key="key">
-                {{`${key} - ${value}`}}
+                {{`${key}: ${value}`}}
               </div>
             </div>            
           </div>
@@ -66,6 +71,10 @@ export default {
     BSpinner
   },
   props: {
+    nodeEid: {
+      type: String,
+      required: true,
+    },  
     typeEid: {
       type: String,
       required: true,
@@ -76,6 +85,9 @@ export default {
     },
   },
   watch: {
+    nodeEid() {
+      this.load();
+    },    
     typeEid() {
       this.load();
     },
@@ -110,7 +122,7 @@ export default {
           ...node.properties,
           eid: node.eid,          
           __relates_to: node.relates_to,
-          _showDetails: true,
+          _showDetails: node.relates_to.length < 1 ? false : true,
         }
       ));
     },
@@ -121,7 +133,16 @@ export default {
       };
 
       // Set the filters for the NodeURL endpoint.
-      if (this.definitionEid) {
+      
+      if (this.nodeEid) {
+        options.params = {
+          filters: {
+            field: "eid",
+            operation: "eq",
+            value: this.nodeEid
+          }
+        }
+      } else if (this.definitionEid) {
         options.params = {
           filters: {
             field: "definition_eid",
@@ -149,6 +170,9 @@ export default {
           this.loadingTable = false;
         })
       .catch(response => console.log(response.message));
+    },
+    redirect(eid, typeEid) {
+      this.$emit('show-node', eid, typeEid);
     },
     remove(eid) {
       console.log(`Remove: ${eid}`);
@@ -184,7 +208,15 @@ export default {
 .relations {
   display: flex;
   justify-content: flex-start;
-  margin-left: 10em;
+  padding: 0px 0px 0px 10em;
+  margin: 0.25em 5em 0.25em 5em;
+  border: solid 1px #dee2e6;
+  border-radius: 8px;
+}
+
+.relations:hover {
+  background-color: lightgray;
+  cursor: pointer;
 }
 
 .properties {

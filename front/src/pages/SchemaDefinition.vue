@@ -4,8 +4,13 @@
     <div v-if="definitionType.eid">
       <definitions-table :definition-type="definitionType" @show-nodes="showNodesByDefinition"/>
     </div>
-    <div v-if="nodeTypeEid || nodeDefinitionEid">
-      <nodes-relations-table :type-eid="nodeTypeEid" :definition-eid="nodeDefinitionEid"/>
+    <div v-if="nodeEid || nodeTypeEid || nodeDefinitionEid">
+      <nodes-relations-table
+        :node-eid="nodeEid"
+        :type-eid="nodeTypeEid"
+        :definition-eid="nodeDefinitionEid"
+        @show-node="showNode"
+      />
     </div>
   </div>
 </template>
@@ -28,6 +33,7 @@ export default {
         eid: "",
         type: "",
       },
+      nodeEid: "",
       nodeTypeEid: "",
       nodeDefinitionEid: "",
     };
@@ -36,11 +42,18 @@ export default {
     showDefinitions(definitionType) {
       this.definitionType = definitionType;
     },
+    showNode(nodeEid, typeEid) {
+      this.nodeEid = nodeEid;
+      this.nodeTypeEid = typeEid;
+      this.nodeDefinitionEid = "";
+    },
     showNodesByType(typeEid) {
+      this.nodeEid = "";
       this.nodeDefinitionEid = "";
       this.nodeTypeEid = typeEid;
     },
     showNodesByDefinition(definitionEid, typeEid) {
+      this.nodeEid = "";
       this.nodeTypeEid = typeEid;
       this.nodeDefinitionEid = definitionEid;
     },    
