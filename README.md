@@ -65,5 +65,4 @@ A proxy is configured on vue.config.js in order to route frontend calls to the b
 
 ### Nodes relations table
 
-![Nodes relations table](doc/nodes-relations-table.png)
-
+![Nodes relations navigation](doc/nodes-relations-navigation.gif)
