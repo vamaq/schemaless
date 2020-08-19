@@ -1,12 +1,11 @@
 from flask import Flask, request, g, abort
 from flask_restful import Resource, reqparse, fields, marshal
 from jsonschema.exceptions import ValidationError
+from sqlalchemy.sql import func, and_
 
 from .entity_type import entity_type_format
 from .filters import filter_type, single_table_query_filter
 from model import tables, metadata
-
-from sqlalchemy.sql import func, and_
 
 
 entity_type_definition_format = {
@@ -70,12 +69,12 @@ class EntityTypeDefinitionEid(Resource):
             if latest_etd != etd:
                 abort(400, 'Not the latest version')
 
-            data = etd_update_args.parse_args()
+            args = etd_update_args.parse_args()
             new_etd = tables.EntityTypeDefinition(
                 entity_type_eid=etd.entity_type_eid,
                 version=etd.version + 1,
-                properties=data['properties'] if 'properties' in data else etd.properties,
-                relations=data['relations'] if 'relations' in data else etd.relations,
+                properties=args['properties'] if 'properties' in args else etd.properties,
+                relations=args['relations'] if 'relations' in args else etd.relations,
             )
 
             metadata.validate(new_etd)
@@ -93,10 +92,10 @@ class EntityTypeDefinition(Resource):
         """ List all the entity types definitions matching the provided filter.
         """
         try:
-            data = filter_args.parse_args()
+            args = filter_args.parse_args()
             etd_list = single_table_query_filter(
                 g.db_session.query(tables.EntityTypeDefinition),
-                data['filters']
+                args['filters']
             ).all()
             return marshal(etd_list, entity_type_definition_format), 200
         except ValueError as e:
@@ -107,12 +106,12 @@ class EntityTypeDefinition(Resource):
         Checks if a etd exists for the same entity and raise an error (in that case an update should be made).
         """
         try:
-            data = etd_create_args.parse_args()
+            args = etd_create_args.parse_args()
 
             existing_etd = g.db_session.query(
                 tables.EntityTypeDefinition
             ).filter(
-                tables.EntityTypeDefinition.entity_type_eid == data['entity_type_eid']
+                tables.EntityTypeDefinition.entity_type_eid == args['entity_type_eid']
             ).first()
 
             if existing_etd:
@@ -120,9 +119,9 @@ class EntityTypeDefinition(Resource):
 
             etd = tables.EntityTypeDefinition(
                 version=1,
-                entity_type_eid=data['entity_type_eid'],
-                properties=data['properties'],
-                relations=data['relations'],
+                entity_type_eid=args['entity_type_eid'],
+                properties=args['properties'],
+                relations=args['relations'],
             )
             metadata.validate(etd)
             g.db_session.add(etd)
@@ -133,7 +132,7 @@ class EntityTypeDefinition(Resource):
             abort(400, str(e))
 
 
-class EntityTypeDefinitionLatestEid(Resource):
+class LatestEntityTypeDefinitionEid(Resource):
     def get(self, eid):
         """ Gets one single entity type latest definition.
         """

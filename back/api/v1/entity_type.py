@@ -41,8 +41,8 @@ class EntityTypeEid(Resource):
             if not entity_type:
                 abort(404)
 
-            data = entity_type_args.parse_args()
-            entity_type.type = data['type']
+            args = entity_type_args.parse_args()
+            entity_type.type = args['type']
             metadata.validate(entity_type)
             g.db_session.commit()
 
@@ -63,8 +63,8 @@ class EntityType(Resource):
         """ Creates a new entity type
         """
         try:
-            data = entity_type_args.parse_args()
-            entity_type = tables.EntityType(type=data['type'])
+            args = entity_type_args.parse_args()
+            entity_type = tables.EntityType(type=args['type'])
             metadata.validate(entity_type)
             g.db_session.add(entity_type)
             g.db_session.commit()
