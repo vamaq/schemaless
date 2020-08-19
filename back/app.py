@@ -1,12 +1,15 @@
-import random
-import string
-
+import logging
 from flask import Flask, request
-
+from flask.logging import default_handler
 from config import config
 from db import init_app as db_init_app
-
 from api.v1 import get_api_v1
+
+
+root = logging.getLogger()
+root.setLevel(logging.INFO)
+root.addHandler(default_handler)
+
 
 def before_request():
     # TODO: Need to properly handle session, CSRF, etc.
