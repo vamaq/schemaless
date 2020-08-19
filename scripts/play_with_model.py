@@ -56,7 +56,7 @@ nodes = session.query(
 ).join(
     Node.entity_type,
 ).filter(
-    EntityType.type == 'book'
+    EntityType.type == 'book store'
 ).all()
 
 # Query: Sorted by price property at the relation.

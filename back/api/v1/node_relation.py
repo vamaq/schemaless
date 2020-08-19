@@ -7,11 +7,21 @@ from .entity_type import entity_type_format
 from .filters import filter_type, single_table_query_filter
 from model import tables, metadata
 
+
+# This is a one level deep nested node. The relation is removed from this node. 
+node_format_nested = {
+    'eid': fields.String,
+    'entity_type': fields.Nested(entity_type_format),
+    'properties': fields.Raw,
+    'definition_eid': fields.String,
+}
+
 relation_format = {
     'eid': fields.String,
     'label': fields.String,
     'properties': fields.Raw,
     'node_to_eid': fields.String,
+    'relates_to': fields.Nested(node_format_nested),
 }
 
 node_format = {
