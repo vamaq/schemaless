@@ -52,3 +52,18 @@ make front-start
 
 The backend API works on the 8090 port and the frontend on the 8080.
 A proxy is configured on vue.config.js in order to route frontend calls to the backend server https://cli.vuejs.org/config/#devserver-proxy
+
+## Screenshots
+
+### Entity types table
+
+![Entity type table](doc/entity-types-table.png)
+
+### Entity types definition table
+
+![Entity type definition table](doc/entity-types-definition-table.png)
+
+### Nodes relations table
+
+![Nodes relations table](doc/nodes-relations-table.png)
+
