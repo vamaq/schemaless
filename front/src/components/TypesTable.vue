@@ -141,7 +141,7 @@ export default {
       this.$emit('show-definitions', definitionType);
     },
     showNodes(eid) {
-      console.log(`list nodes for eid ${eid}`);
+      this.$emit('show-nodes', eid);
     }
   }
 };

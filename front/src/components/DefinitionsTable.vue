@@ -240,7 +240,7 @@ export default {
         .catch(response => console.log(response.message));
     },
     showNodes(eid) {
-      console.log(`definitions for eid ${eid}`);
+      this.$emit('show-nodes', eid, this.definitionType.eid);
     },
   },
 };
