@@ -60,6 +60,7 @@
 import axios from "axios";
 import { BTable, BButton, BModal, BFormInput, BSpinner } from "bootstrap-vue";
 import { NodeURL, LatestEntityTypeDefinitionURL } from "../utils/urls"
+import { parseISO, format } from 'date-fns'
 
 export default {
   name: "nodes-relations-table",
@@ -106,8 +107,23 @@ export default {
     this.load();
   },
   methods: {
+    typeToString(type, value) {
+      // "boolean",
+      // "integer",
+      // "float",
+      // "string",
+      if (type == "date") {
+        return format(parseISO(value), "dd-MMM-yyyy");
+      }
+      return value;
+    },
     mapTableStructure(definition) {
-      let nodeFields = definition.properties.map(prop => prop.name);
+      let nodeFields = definition.properties.map(prop => (
+        {
+          key: prop.name,
+          formatter: (value) => this.typeToString(prop.type, value),
+        }
+      ));
       nodeFields.push(
         {
           key: "controls",
@@ -132,8 +148,7 @@ export default {
         params: {}
       };
 
-      // Set the filters for the NodeURL endpoint.
-      
+      // Set the filters for the NodeURL endpoint.      
       if (this.nodeEid) {
         options.params = {
           filters: {
